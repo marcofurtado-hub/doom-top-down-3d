@@ -82,7 +82,7 @@ canvas{display:block}
         <div><span id="h-time" style="color:#888">0:00</span> &nbsp; KILLS <span id="h-kills">0</span> &nbsp; HI <span class="hl" id="h-hi">0</span></div>
     </div>
     <div id="hud-bot">
-        <div id="hp-wrap"><div id="hp-label">HP 30/30</div><div id="hp-bar-bg"><div id="hp-bar"></div></div></div>
+        <div id="hp-wrap"><div id="hp-label">HP 20/20</div><div id="hp-bar-bg"><div id="hp-bar"></div></div></div>
         <div id="wave-info"></div>
     </div>
     <div id="weapon-bar">
@@ -365,25 +365,25 @@ const ammo={2:28,3:150,4:12,5:80,6:6,7:8,8:200,9:3};
 let reloading=false,reloadT=0;
 
 const EDEF={
-    imp:  {r:0.7,spd:2.88,hp:14,dmg:12,sc:50, col:0xb02010,eye:0xff4444},
-    skull:{r:0.4,spd:4.6, hp:7, dmg:7.2,sc:25, col:0xb8a898,eye:0xff2222},
-    demon:{r:0.8,spd:3.45,hp:25,dmg:16.8,sc:100,col:0xaa3366,eye:0xff66ff},
-    caco: {r:0.9,spd:2.07,hp:35,dmg:14.4,sc:150,col:0xcc4444,eye:0x44ff44,ranged:true,fRate:1.5},
-    baron:{r:1.0,spd:2.3, hp:55,dmg:24,sc:250,col:0x446622,eye:0xff6600},
+    imp:  {r:0.7,spd:3.0,hp:20,dmg:16,sc:50, col:0xb02010,eye:0xff4444},
+    skull:{r:0.4,spd:5.0, hp:10,dmg:10,sc:25, col:0xb8a898,eye:0xff2222},
+    demon:{r:0.8,spd:3.6,hp:35,dmg:22,sc:100,col:0xaa3366,eye:0xff66ff},
+    caco: {r:0.9,spd:2.2,hp:50,dmg:18,sc:150,col:0xcc4444,eye:0x44ff44,ranged:true,fRate:1.2},
+    baron:{r:1.0,spd:2.5, hp:75,dmg:30,sc:250,col:0x446622,eye:0xff6600},
 };
 
 const BDEF=[
-    {name:'IMP LORD',r:1.3,spd:1.5,hp:250,dmg:6,sc:500,col:0x993322,eye:0xff4444,pat:'charge',fRate:2.0,div:false},
-    {name:'DEMON CHIEF',r:1.4,spd:1.8,hp:400,dmg:8,sc:1000,col:0x882244,eye:0xff66ff,pat:'charge',fRate:1.5,div:true,dI:0},
-    {name:'CYBERDEMON',r:1.5,spd:1.2,hp:600,dmg:10,sc:1500,col:0x8a3030,eye:0xff2200,pat:'radial',fRate:1.2,div:false},
-    {name:'CACO KING',r:1.6,spd:1,hp:800,dmg:10,sc:2000,col:0xcc3333,eye:0x44ff44,pat:'radial',fRate:1.0,div:true,dI:1},
-    {name:'BARON LORD',r:1.5,spd:1.5,hp:1000,dmg:12,sc:2500,col:0x2a4a12,eye:0xff8800,pat:'stomp',fRate:1.6,div:false},
-    {name:'SPIDER MIND',r:1.7,spd:0.8,hp:1200,dmg:12,sc:3000,col:0x665544,eye:0xff0000,pat:'spray',fRate:0.6,div:true,dI:2},
-    {name:'THE DIVIDER',r:1.5,spd:1.3,hp:800,dmg:14,sc:3500,col:0x338855,eye:0x88ff88,pat:'charge',fRate:1.2,div:true,dI:3},
-    {name:'ARCH-VILE',r:1.3,spd:2.2,hp:1100,dmg:14,sc:4000,col:0xaa7722,eye:0xffff00,pat:'blink',fRate:0.8,div:false},
-    {name:'PAIN ELEM',r:1.6,spd:1,hp:1400,dmg:12,sc:4500,col:0x8a5533,eye:0xff4444,pat:'summon',fRate:1.8,div:true,dI:4},
-    {name:'ICON OF SIN',r:1.9,spd:0.6,hp:1800,dmg:16,sc:6000,col:0x5a1a1a,eye:0xffff00,pat:'radial',fRate:0.7,div:true,dI:5},
-    {name:'DARK LORD',r:2.1,spd:0.9,hp:2500,dmg:18,sc:10000,col:0x3a0a0a,eye:0xffff00,pat:'all',fRate:0.5,div:true,dI:6},
+    {name:'IMP LORD',r:1.3,spd:1.8,hp:400,dmg:10,sc:500,col:0x993322,eye:0xff4444,pat:'charge',fRate:1.6,div:false},
+    {name:'DEMON CHIEF',r:1.4,spd:2.0,hp:600,dmg:12,sc:1000,col:0x882244,eye:0xff66ff,pat:'charge',fRate:1.2,div:true,dI:0},
+    {name:'CYBERDEMON',r:1.5,spd:1.5,hp:900,dmg:14,sc:1500,col:0x8a3030,eye:0xff2200,pat:'radial',fRate:1.0,div:false},
+    {name:'CACO KING',r:1.6,spd:1.3,hp:1200,dmg:14,sc:2000,col:0xcc3333,eye:0x44ff44,pat:'radial',fRate:0.8,div:true,dI:1},
+    {name:'BARON LORD',r:1.5,spd:1.8,hp:1500,dmg:18,sc:2500,col:0x2a4a12,eye:0xff8800,pat:'stomp',fRate:1.2,div:false},
+    {name:'SPIDER MIND',r:1.7,spd:1.0,hp:1800,dmg:16,sc:3000,col:0x665544,eye:0xff0000,pat:'spray',fRate:0.5,div:true,dI:2},
+    {name:'THE DIVIDER',r:1.5,spd:1.6,hp:1200,dmg:20,sc:3500,col:0x338855,eye:0x88ff88,pat:'charge',fRate:1.0,div:true,dI:3},
+    {name:'ARCH-VILE',r:1.3,spd:2.5,hp:1600,dmg:18,sc:4000,col:0xaa7722,eye:0xffff00,pat:'blink',fRate:0.6,div:false},
+    {name:'PAIN ELEM',r:1.6,spd:1.2,hp:2000,dmg:16,sc:4500,col:0x8a5533,eye:0xff4444,pat:'summon',fRate:1.4,div:true,dI:4},
+    {name:'ICON OF SIN',r:1.9,spd:0.8,hp:2700,dmg:22,sc:6000,col:0x5a1a1a,eye:0xffff00,pat:'radial',fRate:0.5,div:true,dI:5},
+    {name:'DARK LORD',r:2.1,spd:1.1,hp:3500,dmg:25,sc:10000,col:0x3a0a0a,eye:0xffff00,pat:'all',fRate:0.4,div:true,dI:6},
 ];
 
 const UPGRADES=[
@@ -403,7 +403,7 @@ let gameTime=0,paused=false,shake=0,nextBoss=0,volume=50;
 let toSpawn=0,spawnT=0,spawnRate=0,crateT=0;
 
 // Player
-const pl={x:0,z:0,r:0.5,angle:0,hp:30,maxHp:30,spd:10,wep:1,shotT:0,dmgM:1,rateM:1,dashCd:0,dashT:0,inv:0,hurtT:0,walkPhase:0};
+const pl={x:0,z:0,r:0.5,angle:0,hp:20,maxHp:20,spd:10,wep:1,shotT:0,dmgM:1,rateM:1,dashCd:0,dashT:0,inv:0,hurtT:0,walkPhase:0};
 
 // Entity arrays
 let enemies=[],bullets=[],particles=[],crates=[];
@@ -605,7 +605,7 @@ function startGame(){
     state='play';phase='idle';phaseT=0.5;
     waveNum=0;score=0;kills=0;combo=0;comboT=0;comboX=1;shake=0;nextBoss=0;gameTime=0;paused=false;
     $pause.style.display='none';
-    pl.x=0;pl.z=0;pl.hp=30;pl.maxHp=30;pl.spd=10;pl.wep=1;pl.shotT=0;
+    pl.x=0;pl.z=0;pl.hp=20;pl.maxHp=20;pl.spd=10;pl.wep=1;pl.shotT=0;
     pl.dmgM=1;pl.rateM=1;pl.dashCd=0;pl.dashT=0;pl.inv=0;pl.hurtT=0;pl.walkPhase=0;
     unlockedWeapons={1:true};
     // Clear entities
@@ -1055,7 +1055,7 @@ function update(dt){
     }else if(phase==='bosswait'&&phaseT<=0){
         const bi=Math.min(nextBoss,BDEF.length-1);enemies.push(mkBoss(bi,0,0));nextBoss++;sfx.boss();phase='boss';
     }else if(phase==='boss'){
-        if(!enemies.some(e=>e.boss&&e.alive)){phase='done';phaseT=0.8;setMusMode('normal');UPGRADES[Math.floor(Math.random()*UPGRADES.length)](pl);
+        if(!enemies.some(e=>e.boss&&e.alive)){phase='done';phaseT=0.8;setMusMode('normal');pl.hp=pl.maxHp;announce('WAVE CLEAR!','FULL HEAL!',2000);UPGRADES[Math.floor(Math.random()*UPGRADES.length)](pl);
             const nextWep=Object.keys(unlockedWeapons).length+1;
             if(nextWep<=WC){unlockedWeapons[nextWep]=true;ammo[nextWep]=WEAP[nextWep].maxAmmo;pl.wep=nextWep;announce('NEW WEAPON!',WEAP[nextWep].name,2500);sfx.pickup();}
             else{announce('WAVE CLEAR!','',1500);}
