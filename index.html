@@ -692,8 +692,9 @@ function update(dt){
         }
         // Inner wall ricochet
         if(bulletBounceInnerWall(b)){
-            if(b.expl||b.fire){sfx.explode();emitP(b.x,b.z,0xd06020,8,4);shake=Math.max(shake,0.3);
-                for(const en of enemies){if(!en.alive||en.spawning)continue;const dd=dst(b,en);if(dd<b.blast){en.hp-=b.dmg*(1-dd/b.blast);en.hitT=0.08;if(en.hp<=0)killEn(en);}}}
+            if(b.expl||b.fire){
+                sfx.explode();emitP(b.x,b.z,0xd06020,8,4);shake=Math.max(shake,0.3);
+                for(const en of enemies){if(!en.alive||en.spawning)continue;const dd=dst(b,en);if(dd<b.blast){en.hp-=b.dmg*(1-dd/b.blast);en.hitT=0.08;if(en.hp<=0)killEn(en);}}
                 b.alive=false;scene.remove(b.mesh);continue;
             }
             b.bounces++;if(b.bounces>b.ric){b.alive=false;scene.remove(b.mesh);continue;}
