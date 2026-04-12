@@ -9,19 +9,35 @@
 body{background:#000;overflow:hidden;font-family:'Courier New',monospace;cursor:crosshair;user-select:none}
 canvas{display:block}
 #hud{position:fixed;top:0;left:0;width:100%;pointer-events:none;z-index:10}
-#hud-top{display:flex;justify-content:space-between;padding:8px 16px;background:rgba(0,0,0,0.5)}
-#hud-top div{color:#ccc;font-size:14px;font-weight:bold}
+#hud-top{display:flex;justify-content:space-between;padding:6px 16px;background:rgba(0,0,0,0.4)}
+#hud-top div{color:#ccc;font-size:13px;font-weight:bold}
 .hl{color:#e8c020}
-#hud-bot{position:fixed;bottom:0;left:0;width:100%;display:flex;justify-content:space-between;align-items:end;padding:8px 16px;pointer-events:none}
-#hp-wrap{width:200px}
-#hp-label{color:#b8a898;font-size:12px;margin-bottom:2px}
-#hp-bar-bg{width:100%;height:14px;background:#300;border:1px solid #555}
-#hp-bar{height:100%;background:#28882a;transition:width 0.2s}
-#wave-info{color:#e03818;font-size:16px;font-weight:bold;text-align:right}
-#weapon-bar{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:6px;pointer-events:none}
-.wep{color:#555;font-size:12px;font-weight:bold;padding:2px 6px;border:1px solid #333;background:rgba(0,0,0,0.5)}
-.wep.active{color:#e8c020;border-color:#e8c020}
-#ammo-info{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);color:#e8c020;font-family:monospace;font-size:16px;font-weight:bold;pointer-events:none}
+#wave-info{position:fixed;top:40px;right:16px;color:#e03818;font-size:14px;font-weight:bold;pointer-events:none;z-index:10}
+/* DOOM-style bottom HUD bar */
+#doom-hud{position:fixed;bottom:0;left:0;width:100%;height:64px;background:#2a2a2a;border-top:2px solid #555;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:10;gap:0}
+#doom-hud.hidden{display:none}
+.dhud-section{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 12px;border-right:1px solid #444;height:100%}
+.dhud-section:last-child{border-right:none}
+.dhud-label{color:#888;font-size:9px;text-transform:uppercase;letter-spacing:1px}
+.dhud-value{color:#e8c020;font-size:20px;font-weight:bold}
+.dhud-value.red{color:#e03818}
+/* Face section */
+#doom-face{width:56px;height:56px;background:#3a3a3a;border:2px solid #555;border-radius:4px;display:flex;align-items:center;justify-content:center;margin:0 8px;position:relative;overflow:hidden}
+#doom-face canvas{width:100%;height:100%;image-rendering:pixelated}
+/* HP bar centered */
+#dhud-hp-wrap{width:120px}
+#dhud-hp-bg{width:100%;height:10px;background:#400;border:1px solid #666}
+#dhud-hp-bar{height:100%;background:#28882a;transition:width 0.15s}
+/* Weapon slots */
+#dhud-weapons{display:flex;gap:3px;align-items:center}
+.dwep{color:#444;font-size:10px;font-weight:bold;padding:1px 4px;border:1px solid #333;background:#1a1a1a}
+.dwep.active{color:#e8c020;border-color:#e8c020;background:#2a2208}
+.dwep.locked{opacity:0.2}
+/* Ammo display */
+#dhud-ammo{min-width:80px;text-align:center}
+/* Glitch damage overlay */
+#hurt-glitch{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:8;opacity:0}
+#hurt-glitch .glitch-bar{position:absolute;left:0;width:100%;background:rgba(255,0,0,0.3);height:3px}
 #announce{position:fixed;top:45%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:20;opacity:0;transition:opacity 0.3s}
 #announce h1{font-size:48px;color:#e03818;text-shadow:0 0 20px rgba(224,56,24,0.5)}
 #announce h2{font-size:24px;color:#d06020;margin-top:4px}
@@ -83,19 +99,36 @@ canvas{display:block}
         <div id="h-combo" style="color:#e8c020"></div>
         <div><span id="h-time" style="color:#888">0:00</span> &nbsp; KILLS <span id="h-kills">0</span> &nbsp; HI <span class="hl" id="h-hi">0</span></div>
     </div>
-    <div id="hud-bot">
-        <div id="hp-wrap"><div id="hp-label">HP 20/20</div><div id="hp-bar-bg"><div id="hp-bar"></div></div></div>
-        <div id="wave-info"></div>
+    <div id="wave-info"></div>
+</div>
+<div id="doom-hud" class="hidden">
+    <div class="dhud-section" id="dhud-ammo">
+        <div class="dhud-label">AMMO</div>
+        <div class="dhud-value" id="dh-ammo">∞</div>
     </div>
-    <div id="weapon-bar">
-        <div class="wep active" id="w1">[1]PIS</div><div class="wep" id="w2">[2]SG</div><div class="wep" id="w3">[3]CG</div>
-        <div class="wep" id="w4">[4]RL</div><div class="wep" id="w5">[5]PL</div><div class="wep" id="w6">[6]BM</div><div class="wep" id="w7">[7]ML</div>
-        <div class="wep" id="w8">[8]LAS</div><div class="wep" id="w9">[9]MB</div>
+    <div class="dhud-section">
+        <div class="dhud-label">HEALTH</div>
+        <div class="dhud-value red" id="dh-hp">100%</div>
+        <div id="dhud-hp-wrap"><div id="dhud-hp-bg"><div id="dhud-hp-bar"></div></div></div>
     </div>
-    <div id="ammo-info"></div>
+    <div id="doom-face"><canvas id="face-canvas" width="48" height="48"></canvas></div>
+    <div class="dhud-section">
+        <div class="dhud-label">ARMS</div>
+        <div id="dhud-weapons">
+            <div class="dwep active" id="w1">1</div><div class="dwep" id="w2">2</div><div class="dwep" id="w3">3</div>
+            <div class="dwep" id="w4">4</div><div class="dwep" id="w5">5</div><div class="dwep" id="w6">6</div>
+            <div class="dwep" id="w7">7</div><div class="dwep" id="w8">8</div><div class="dwep" id="w9">9</div>
+        </div>
+        <div style="color:#888;font-size:9px" id="dh-wepname">PISTOL</div>
+    </div>
+    <div class="dhud-section">
+        <div class="dhud-label">WAVE</div>
+        <div class="dhud-value" id="dh-wave">1</div>
+    </div>
 </div>
 <div id="announce"><h1></h1><h2></h2></div>
 <div id="hurt-vignette"></div>
+<div id="hurt-glitch"></div>
 
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
 <script type="module">
@@ -276,13 +309,82 @@ function bulletBounceInnerWall(b){
 const $=id=>document.getElementById(id);
 const $start=$('start-screen'),$over=$('game-over'),$hud=$('hud');
 const $hWave=$('h-wave'),$hScore=$('h-score'),$hKills=$('h-kills'),$hHi=$('h-hi'),$hTime=$('h-time');
-const $hCombo=$('h-combo'),$waveInfo=$('wave-info'),$hpLabel=$('hp-label'),$hpBar=$('hp-bar');
+const $hCombo=$('h-combo'),$waveInfo=$('wave-info');
 const $ann=$('announce'),$annH1=$ann.querySelector('h1'),$annH2=$ann.querySelector('h2');
-const $ammo=$('ammo-info'),$pause=$('pause-screen'),$hurtVig=$('hurt-vignette');
+const $pause=$('pause-screen'),$hurtVig=$('hurt-vignette'),$hurtGlitch=$('hurt-glitch');
+const $doomHud=$('doom-hud'),$dhAmmo=$('dh-ammo'),$dhHp=$('dh-hp'),$dhHpBar=$('dhud-hp-bar');
+const $dhWave=$('dh-wave'),$dhWepName=$('dh-wepname');
+const faceCanvas=$('face-canvas'),faceCtx=faceCanvas.getContext('2d');
 const $goStats=$('go-stats'),$goRank=$('go-ranking'),$goName=$('go-name'),$goInput=$('go-input');
 const $w={};for(let i=1;i<=9;i++)$w[i]=$('w'+i);
 
 function announce(t,s,d){$annH1.textContent=t;$annH2.textContent=s||'';$ann.style.opacity='1';setTimeout(()=>$ann.style.opacity='0',d||2000);}
+
+// DOOM face drawing (pixel art on canvas)
+function drawDoomFace(hpRatio,isHurt){
+    const c=faceCtx,w=48,h=48;
+    c.clearRect(0,0,w,h);
+    // Skin color based on health
+    const skin=isHurt?'#ff4444':(hpRatio>0.6?'#d4a574':hpRatio>0.3?'#c89060':'#a06040');
+    const bg=hpRatio>0.6?'#3a3a3a':'#2a1a1a';
+    c.fillStyle=bg;c.fillRect(0,0,w,h);
+    // Face shape
+    c.fillStyle=skin;c.fillRect(10,6,28,32);
+    // Hair (brown)
+    c.fillStyle='#5a3a20';c.fillRect(10,4,28,8);
+    // Eyes
+    if(hpRatio>0.3){
+        c.fillStyle='#fff';c.fillRect(14,16,7,6);c.fillRect(27,16,7,6);
+        // Pupils (look around randomly)
+        const px=isHurt?0:Math.floor(Math.random()*3)-1;
+        c.fillStyle='#222';c.fillRect(16+px,18,3,3);c.fillRect(29+px,18,3,3);
+    }else{
+        // Squinting in pain
+        c.fillStyle='#fff';c.fillRect(14,17,7,3);c.fillRect(27,17,7,3);
+        c.fillStyle='#222';c.fillRect(16,18,3,2);c.fillRect(29,18,3,2);
+    }
+    // Mouth - expression based on health
+    if(isHurt){
+        // Grimace
+        c.fillStyle='#400';c.fillRect(17,28,14,5);
+        c.fillStyle='#fff';c.fillRect(18,28,3,2);c.fillRect(23,28,3,2);c.fillRect(28,28,3,2);
+    }else if(hpRatio>0.6){
+        // Determined grin
+        c.fillStyle='#600';c.fillRect(19,28,10,3);
+    }else if(hpRatio>0.3){
+        // Worried
+        c.fillStyle='#600';c.fillRect(18,29,12,3);
+        c.fillStyle='#400';c.fillRect(19,27,10,2);
+    }else{
+        // Bloody mess
+        c.fillStyle='#800';c.fillRect(16,26,16,6);
+        c.fillStyle='#ff0000';c.fillRect(12,14,4,8);// blood on left
+        c.fillStyle='#ff0000';c.fillRect(32,20,4,6);// blood on right
+        c.fillStyle='#fff';c.fillRect(19,27,3,2);c.fillRect(26,27,3,2);// teeth
+    }
+    // Blood splatters when hurt
+    if(hpRatio<0.5){
+        c.fillStyle='#880000';
+        c.fillRect(10+Math.floor(Math.random()*5),12,3,3);
+        if(hpRatio<0.25){c.fillRect(30+Math.floor(Math.random()*5),15,4,3);c.fillRect(14,32,6,2);}
+    }
+}
+
+// Glitch damage effect
+function triggerDamageGlitch(){
+    $hurtGlitch.innerHTML='';
+    const bars=5+Math.floor(Math.random()*5);
+    for(let i=0;i<bars;i++){
+        const bar=document.createElement('div');bar.className='glitch-bar';
+        bar.style.top=Math.floor(Math.random()*100)+'%';
+        bar.style.height=(2+Math.random()*8)+'px';
+        bar.style.background=`rgba(${180+Math.floor(Math.random()*75)},0,0,${0.2+Math.random()*0.4})`;
+        bar.style.transform=`translateX(${(Math.random()-0.5)*20}px)`;
+        $hurtGlitch.appendChild(bar);
+    }
+    $hurtGlitch.style.opacity='1';
+    setTimeout(()=>{$hurtGlitch.style.opacity='0';},80);
+}
 
 // ===== INPUT =====
 const keys={};let mx=0,my=0,mDown=false,clicked=false;
@@ -621,7 +723,7 @@ function startGame(){
     for(let w=2;w<=WC;w++)ammo[w]=0;
     reloading=false;reloadT=0;
     genMaze3D();
-    $start.style.display='none';$over.style.display='none';$hud.style.display='block';
+    $start.style.display='none';$over.style.display='none';$hud.style.display='block';$doomHud.classList.remove('hidden');
     $hHi.textContent=hiScore;
     if(!musInt){initAudio();startMusic();}
     setMusMode('normal');
@@ -633,7 +735,7 @@ function die(){
     stopMusic();sfx.explode();emitP(pl.x,pl.z,0xe03818,20,5);
     $goStats.textContent=`Score: ${score} | Wave: ${waveNum} | Kills: ${kills} | Time: ${fmtTime(gameTime)}`;
     $goInput.value='';$goName.style.display='block';showRanking();
-    $over.style.display='flex';$hud.style.display='none';
+    $over.style.display='flex';$hud.style.display='none';$doomHud.classList.add('hidden');
     setTimeout(()=>$goInput.focus(),100);
 }
 
@@ -876,8 +978,10 @@ function update(dt){
         else playerShoot();
     }
 
-    pl.inv=Math.max(0,pl.inv-dt);pl.hurtT=Math.max(0,pl.hurtT-dt);
-    $hurtVig.style.opacity=pl.hurtT>0?Math.min(1,pl.hurtT*8):0;
+    pl.inv=Math.max(0,pl.inv-dt);
+    const wasHurt=pl.hurtT>0;pl.hurtT=Math.max(0,pl.hurtT-dt);
+    $hurtVig.style.opacity=pl.hurtT>0?Math.min(1,pl.hurtT*10):0;
+    if(wasHurt&&pl.hurtT>0.05)triggerDamageGlitch();
     if(shake>0)shake=Math.max(0,shake-dt*3);
     if(comboT>0){comboT-=dt;if(comboT<=0){combo=0;comboX=1;}}
 
@@ -1070,22 +1174,36 @@ function update(dt){
 }
 
 function updateHUD(){
+    // Top bar
     $hWave.textContent=waveNum;$hScore.textContent=score;$hKills.textContent=kills;$hTime.textContent=fmtTime(gameTime);
     $hCombo.textContent=combo>2?'x'+comboX+' COMBO':'';
-    $hpLabel.textContent='HP '+Math.ceil(pl.hp)+'/'+pl.maxHp;
-    $hpBar.style.width=Math.max(0,pl.hp/pl.maxHp*100)+'%';
-    $hpBar.style.background=pl.hp/pl.maxHp>0.5?'#28882a':pl.hp/pl.maxHp>0.25?'#c8a010':'#b02010';
-    const wN={1:'PIS',2:'SG',3:'CG',4:'RL',5:'PL',6:'BM',7:'ML',8:'LAS',9:'MB'};
-    for(let i=1;i<=WC;i++){
-        if(!unlockedWeapons[i]){$w[i].textContent='['+i+']---';$w[i].className='wep';$w[i].style.opacity='0.25';}
-        else{$w[i].textContent='['+i+']'+wN[i]+(i>1?' '+ammo[i]:'');$w[i].className=pl.wep===i?'wep active':'wep';$w[i].style.opacity='1';}
-    }
-    $ammo.textContent=pl.wep===1?'':(reloading?'RELOADING...':WEAP[pl.wep].name+' '+ammo[pl.wep]+'/'+WEAP[pl.wep].maxAmmo);
+    // Wave info
     if(phase==='spawn'||phase==='fight'){$waveInfo.textContent='ENEMIES: '+(enemies.filter(e=>e.alive&&!e.boss).length+toSpawn);$waveInfo.style.color='#e03818';}
     else if(phase==='boss'){const b=enemies.find(e=>e.boss&&e.alive);$waveInfo.textContent=b?b.name+' HP:'+Math.ceil(b.hp):'';$waveInfo.style.color='#e03818';}
     else if(phase==='bosswait'){$waveInfo.textContent='BOSS INCOMING...';$waveInfo.style.color='#d06020';}
     else if(phase==='done'){$waveInfo.textContent='WAVE CLEAR!';$waveInfo.style.color='#50cc40';}
     else $waveInfo.textContent='';
+    // DOOM HUD - Health
+    const hpR=Math.max(0,pl.hp/pl.maxHp);
+    $dhHp.textContent=Math.ceil(hpR*100)+'%';
+    $dhHp.style.color=hpR>0.5?'#e8c020':hpR>0.25?'#e08020':'#e03818';
+    $dhHpBar.style.width=(hpR*100)+'%';
+    $dhHpBar.style.background=hpR>0.5?'#28882a':hpR>0.25?'#c8a010':'#b02010';
+    // Ammo
+    if(pl.wep===1)$dhAmmo.textContent='∞';
+    else if(reloading)$dhAmmo.textContent='RLD';
+    else $dhAmmo.textContent=ammo[pl.wep];
+    // Weapons
+    const wN={1:'PIS',2:'SG',3:'CG',4:'RL',5:'PL',6:'BM',7:'ML',8:'LAS',9:'MB'};
+    for(let i=1;i<=WC;i++){
+        $w[i].textContent=i;
+        if(!unlockedWeapons[i]){$w[i].className='dwep locked';}
+        else{$w[i].className=pl.wep===i?'dwep active':'dwep';}
+    }
+    $dhWepName.textContent=WEAP[pl.wep].name;
+    $dhWave.textContent=waveNum;
+    // Face
+    drawDoomFace(hpR,pl.hurtT>0);
 }
 
 // ===== RENDER LOOP =====
