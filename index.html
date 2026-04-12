@@ -737,9 +737,26 @@ function spawnDmgNum(x,z,dmg){
     particles.push({alive:true,mesh:sprite,vx:(Math.random()-0.5)*0.5,vy:3,vz:(Math.random()-0.5)*0.5,life:0.8,ml:0.8,isDmgNum:true});
 }
 
+function mkBloodSplat(px,pz,size,col){
+    const geo=new THREE.CylinderGeometry(size,size,0.01,8);
+    const mat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.7+Math.random()*0.15});
+    const m=new THREE.Mesh(geo,mat);m.position.set(px,0.02+Math.random()*0.005,pz);scene.add(m);
+    bloodPools.push({mesh:m,life:6.0,maxLife:6.0});
+}
+function mkWallSplat(wx,wz,axis,col,size){
+    // axis: 'x' = on wall facing X, 'z' = on wall facing Z
+    const geo=new THREE.CylinderGeometry(size,size,0.01,8);
+    const mat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.6+Math.random()*0.2});
+    const m=new THREE.Mesh(geo,mat);
+    if(axis==='x'){m.rotation.z=Math.PI/2;m.position.set(wx,0.5+Math.random()*1.5,wz);}
+    else{m.rotation.x=Math.PI/2;m.position.set(wx,0.5+Math.random()*1.5,wz);}
+    scene.add(m);
+    bloodPools.push({mesh:m,life:8.0,maxLife:8.0});
+}
+
 function bloodExplosion(x,z,r){
     const darkReds=[0x550000,0x660000,0x440000,0x330000,0x770000,0x550808];
-    // Few chunky gore pieces flying out (NOT spheres - flat pixelated boxes)
+    // Few chunky gore pieces flying out
     const n=6+Math.floor(r*4);
     for(let i=0;i<n;i++){
         const a=Math.random()*Math.PI*2,s=2+Math.random()*4;
@@ -749,34 +766,44 @@ function bloodExplosion(x,z,r){
         mesh.rotation.set(Math.random()*3,Math.random()*3,Math.random()*3);scene.add(mesh);
         particles.push({alive:true,mesh,vx:Math.cos(a)*s,vy:1+Math.random()*2,vz:Math.sin(a)*s,life:0.3+Math.random()*0.3,ml:0.3+Math.random()*0.3});
     }
-    // 2-3 meat chunks (bigger, darker)
+    // 2-3 meat chunks
     for(let i=0;i<2+Math.floor(r);i++){
         const a=Math.random()*Math.PI*2,s=1+Math.random()*3;
         const mesh=mkBoxMesh(0.12+Math.random()*0.1,0.08+Math.random()*0.06,0.12+Math.random()*0.1,darkReds[Math.floor(Math.random()*2)]);
         mesh.position.set(x,0.2,z);mesh.rotation.set(Math.random()*6,Math.random()*6,Math.random()*6);scene.add(mesh);
         particles.push({alive:true,mesh,vx:Math.cos(a)*s,vy:2+Math.random()*2,vz:Math.sin(a)*s,life:0.5+Math.random()*0.3,ml:0.5+Math.random()*0.3});
     }
-    // SPLATTER: multiple flat blood stains on floor (pixelated squares, not circles)
+    // FLOOR SPLATS: round blood pools on floor
     const splats=3+Math.floor(Math.random()*4);
     for(let i=0;i<splats;i++){
         const ox=(Math.random()-0.5)*r*2.5,oz=(Math.random()-0.5)*r*2.5;
-        const sw=0.3+Math.random()*0.6,sd=0.3+Math.random()*0.6;
-        const col=darkReds[Math.floor(Math.random()*darkReds.length)];
-        const splatGeo=new THREE.BoxGeometry(sw,0.01,sd);
-        const splatMat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.7});
-        const splat=new THREE.Mesh(splatGeo,splatMat);
-        splat.position.set(x+ox,0.02+Math.random()*0.01,z+oz);
-        splat.rotation.y=Math.random()*Math.PI;
-        scene.add(splat);
-        bloodPools.push({mesh:splat,life:5.0,maxLife:5.0});
+        const sz=0.15+Math.random()*0.35;
+        mkBloodSplat(x+ox,z+oz,sz,darkReds[Math.floor(Math.random()*darkReds.length)]);
     }
-    // Main pool (darker, square-ish = pixelated)
-    const poolS=0.4+r*0.4;
-    const poolGeo=new THREE.BoxGeometry(poolS*1.5,0.01,poolS*1.5);
-    const poolMat=new THREE.MeshBasicMaterial({color:0x330000,transparent:true,opacity:0.8});
-    const pool=new THREE.Mesh(poolGeo,poolMat);
-    pool.position.set(x,0.015,z);pool.rotation.y=Math.random()*Math.PI;scene.add(pool);
-    bloodPools.push({mesh:pool,life:6.0,maxLife:6.0});
+    // Main pool (bigger, darker)
+    mkBloodSplat(x,z,0.4+r*0.4,0x330000);
+    // WALL SPLATS: if near outer walls or inner walls, spray blood on them
+    const wallDist=2.5;
+    // Outer walls
+    if(x>HW-wallDist) for(let i=0;i<2+Math.floor(Math.random()*3);i++) mkWallSplat(HW+WALL_T/2-0.05,z+(Math.random()-0.5)*2,'x',darkReds[Math.floor(Math.random()*darkReds.length)],0.2+Math.random()*0.3);
+    if(x<-HW+wallDist) for(let i=0;i<2+Math.floor(Math.random()*3);i++) mkWallSplat(-HW-WALL_T/2+0.05,z+(Math.random()-0.5)*2,'x',darkReds[Math.floor(Math.random()*darkReds.length)],0.2+Math.random()*0.3);
+    if(z>HH-wallDist) for(let i=0;i<2+Math.floor(Math.random()*3);i++) mkWallSplat(x+(Math.random()-0.5)*2,HH+WALL_T/2-0.05,'z',darkReds[Math.floor(Math.random()*darkReds.length)],0.2+Math.random()*0.3);
+    if(z<-HH+wallDist) for(let i=0;i<2+Math.floor(Math.random()*3);i++) mkWallSplat(x+(Math.random()-0.5)*2,-HH-WALL_T/2+0.05,'z',darkReds[Math.floor(Math.random()*darkReds.length)],0.2+Math.random()*0.3);
+    // Inner walls
+    for(const w of innerWalls){
+        const hw=w.w/2,hd=w.d/2;
+        const dx=x-w.x,dz=z-w.z;
+        if(Math.abs(dx)<hw+wallDist&&Math.abs(dz)<hd+wallDist){
+            // Which face is closest?
+            if(w.w>w.d){// horizontal wall - splat on Z faces
+                if(dz>0) for(let i=0;i<1+Math.floor(Math.random()*2);i++) mkWallSplat(x+(Math.random()-0.5)*1.5,w.z+hd+0.05,'z',darkReds[Math.floor(Math.random()*darkReds.length)],0.15+Math.random()*0.25);
+                else for(let i=0;i<1+Math.floor(Math.random()*2);i++) mkWallSplat(x+(Math.random()-0.5)*1.5,w.z-hd-0.05,'z',darkReds[Math.floor(Math.random()*darkReds.length)],0.15+Math.random()*0.25);
+            }else{// vertical wall - splat on X faces
+                if(dx>0) for(let i=0;i<1+Math.floor(Math.random()*2);i++) mkWallSplat(w.x+hw+0.05,z+(Math.random()-0.5)*1.5,'x',darkReds[Math.floor(Math.random()*darkReds.length)],0.15+Math.random()*0.25);
+                else for(let i=0;i<1+Math.floor(Math.random()*2);i++) mkWallSplat(w.x-hw-0.05,z+(Math.random()-0.5)*1.5,'x',darkReds[Math.floor(Math.random()*darkReds.length)],0.15+Math.random()*0.25);
+            }
+        }
+    }
     hitPause=0.03;
 }
 
