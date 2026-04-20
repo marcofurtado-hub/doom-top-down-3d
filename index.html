@@ -144,7 +144,7 @@ renderer.setClearColor(0x000000);
 document.body.prepend(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x000000, 0.03);
+scene.fog = new THREE.FogExp2(0x000000, 0.045);
 
 // Camera: perspective looking down at angle
 const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 200);
@@ -157,16 +157,16 @@ addEventListener('resize', ()=>{
     camera.updateProjectionMatrix();
 });
 
-// Lights - DARK MODE (flashlight-driven)
-const ambLight = new THREE.AmbientLight(0x252030, 0.9);
+// Lights - DARK MODE (flashlight-driven) - heavy darkness outside beam
+const ambLight = new THREE.AmbientLight(0x18151e, 0.25);
 scene.add(ambLight);
-const dirLight = new THREE.DirectionalLight(0x405060, 0.35); // faint moonlight
+const dirLight = new THREE.DirectionalLight(0x304050, 0.08); // barely there moonlight
 dirLight.position.set(10, 30, 10);
 dirLight.castShadow = false;
 scene.add(dirLight);
 
 // Red atmospheric (very dim, pulses for dread)
-const redLight = new THREE.PointLight(0x5a1010, 0.5, 60);
+const redLight = new THREE.PointLight(0x5a1010, 0.25, 50);
 redLight.position.set(0, 8, 0);
 scene.add(redLight);
 
@@ -1396,11 +1396,11 @@ function adaptQuality(t){
             renderer.shadowMap.enabled=false;
             renderer.setPixelRatio(1);
             // Keep fog but lighter so visibility stays OK if struggling
-            scene.fog=new THREE.FogExp2(0x000000,0.022);
+            scene.fog=new THREE.FogExp2(0x000000,0.035);
         }else if(_fpsAvg>45&&_qualityLow){
             _qualityLow=false;
             renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
-            scene.fog=new THREE.FogExp2(0x000000,0.03);
+            scene.fog=new THREE.FogExp2(0x000000,0.045);
         }
     }
 }
