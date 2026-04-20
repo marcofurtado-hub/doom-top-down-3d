@@ -257,10 +257,11 @@ scene.add(floor);
 // Floor grid lines
 const gridHelper = new THREE.GridHelper(Math.max(AW,AH), 20, 0x2a1518, 0x1a0e10);
 gridHelper.position.y = 0.01;
+gridHelper.visible = false; // hidden in dark mode
 scene.add(gridHelper);
 
 // Walls
-const wallMat = new THREE.MeshPhongMaterial({color:0x5a3838, emissive:0x2a1414});
+const wallMat = new THREE.MeshPhongMaterial({color:0x5a3838, emissive:0x000000});
 function mkWall(w,h,d,x,y,z){
     const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), wallMat);
     m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);return m;
@@ -310,7 +311,7 @@ function genMaze3D(){
     innerWallMeshes.forEach(m=>scene.remove(m));
     innerWallMeshes=[];innerWalls=[];
     const layout=MAZE_LAYOUTS[Math.floor(Math.random()*MAZE_LAYOUTS.length)];
-    const wallMat2=new THREE.MeshPhongMaterial({color:0x6a3838,emissive:0x2a1414});
+    const wallMat2=new THREE.MeshPhongMaterial({color:0x6a3838,emissive:0x000000});
     for(const def of layout){
         // Mirror symmetrically (4-way for non-axis, 2-way for axis walls)
         const positions=[];
