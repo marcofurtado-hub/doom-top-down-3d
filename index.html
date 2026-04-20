@@ -138,13 +138,12 @@ import * as THREE from 'three';
 const renderer = new THREE.WebGLRenderer({antialias:false, powerPreference:'high-performance'});
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.shadowMap.enabled = false;
 renderer.setClearColor(0x000000);
 document.body.prepend(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x000000, 0.045);
+scene.fog = null;
 
 // Camera: perspective looking down at angle
 const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 200);
@@ -170,145 +169,28 @@ const redLight = new THREE.PointLight(0x000000, 0, 1);
 redLight.position.set(0, 8, 0);
 scene.add(redLight);
 
-// Strong warm glow around player (keeps player + close enemies visible)
-const plLight = new THREE.PointLight(0xffb070, 3.1, 9);
-plLight.position.set(0, 1.5, 0);
-scene.add(plLight);
+// Dummy references (kept so existing code doesn't break)
+const plLight = new THREE.PointLight(0x000000, 0, 1);scene.add(plLight);
+const muzzleLight = new THREE.PointLight(0x000000, 0, 1);scene.add(muzzleLight);
 
-// Muzzle flash light - big punchy glow
-const muzzleLight = new THREE.PointLight(0xffd060, 0, 14);
-muzzleLight.position.set(0, 1, 0);
-scene.add(muzzleLight);
-
-// Visible muzzle flash mesh (emissive sphere at gun tip)
-const muzzleFlashGeo = new THREE.SphereGeometry(0.25, 6, 5);
-const muzzleFlashMat = new THREE.MeshBasicMaterial({color:0xffe080, transparent:true, opacity:0});
-const muzzleFlashMesh = new THREE.Mesh(muzzleFlashGeo, muzzleFlashMat);
-muzzleFlashMesh.visible = false;
-scene.add(muzzleFlashMesh);
-let muzzleFlashT = 0;
-let muzzleFlashColor = 0xffe080;
-
-function triggerMuzzleFlash(color){
-    muzzleFlashT = 0.09;
-    muzzleFlashColor = color;
-    muzzleFlashMat.color.setHex(color);
-    muzzleLight.color.setHex(color);
-    muzzleLight.intensity = 12;
-    muzzleFlashMesh.visible = true;
-    muzzleFlashMat.opacity = 1;
-    muzzleFlashMesh.scale.set(1,1,1);
-    muzzleFlashMesh.position.set(pl.x + Math.cos(pl.angle)*1.05, 0.85, pl.z + Math.sin(pl.angle)*1.05);
-    setTimeout(()=>muzzleLight.intensity=0, 80);
-}
-
-// ===== BULLET ILLUMINATION =====
-// Pool of PointLights attached to bullets - gives tracer glow on floor/walls
-const _bulletLightPool = [];
-const MAX_BULLET_LIGHTS = 12;
-let _activeBulletLights = 0;
-function acquireBulletLight(color){
-    if(_activeBulletLights >= MAX_BULLET_LIGHTS) return null;
-    _activeBulletLights++;
-    let l;
-    if(_bulletLightPool.length > 0){
-        l = _bulletLightPool.pop();
-        l.color.setHex(color);
-    } else {
-        l = new THREE.PointLight(color, 2.5, 3.5);
-    }
-    l.intensity = 2.5;
-    scene.add(l);
-    return l;
-}
-function releaseBulletLight(l){
-    if(!l) return;
-    scene.remove(l);
-    _bulletLightPool.push(l);
-    _activeBulletLights--;
-}
-
-// ===== HIT FLASH =====
-// Brief PointLight pulse when bullet hits enemy
-function hitFlashFX(x, z, color){
-    let light;
-    if(_explLightPool.length>0){light=_explLightPool.pop();}
-    else{light=new THREE.PointLight(0xffffff,1,1);}
-    light.color.setHex(color);
-    light.intensity = 5;
-    light.distance = 3.5;
-    light.position.set(x, 0.8, z);
-    scene.add(light);
-    explFlashes.push({light, life: 0.12, maxLife: 0.12, baseI: 5});
-}
-
-// ===== FLASHLIGHT SYSTEM =====
-// Main beam - POWERFUL, wider, long reach, CASTS SHADOWS
-const flashlight = new THREE.SpotLight(0xfff5d8, 75, 30, Math.PI/6, 0.4, 1.0);
+// SIMPLIFIED: hard-edge flashlight only, no fade/halo/bounces
+const flashlight = new THREE.SpotLight(0xffffff, 4, 24, Math.PI/5, 0, 0);
 flashlight.position.set(0, 1.6, 0);
 flashlight.target = new THREE.Object3D();
-flashlight.castShadow = true;
-flashlight.shadow.mapSize.set(512, 512);
-flashlight.shadow.camera.near = 0.5;
-flashlight.shadow.camera.far = 30;
-flashlight.shadow.bias = -0.002;
-flashlight.shadow.radius = 2;
 scene.add(flashlight);
 scene.add(flashlight.target);
 
-// Wider halo - strong lateral fill (no shadow to save perf)
-const flashHalo = new THREE.SpotLight(0xffe8b8, 22, 16, Math.PI/2.8, 0.85, 1.3);
-flashHalo.position.set(0, 1.6, 0);
-flashHalo.target = new THREE.Object3D();
-scene.add(flashHalo);
-scene.add(flashHalo.target);
-
-// Fake bounce 1 - warm glow where beam hits a surface (+25%)
-const bounce1 = new THREE.PointLight(0xffc888, 3.75, 11);
-bounce1.position.set(0, 1.0, 0);
-scene.add(bounce1);
-
-// Fake bounce 2 - floor bounce fill (+25%)
-const bounce2 = new THREE.PointLight(0xffdba0, 1.9, 9);
-bounce2.position.set(0, 0.3, 0);
-scene.add(bounce2);
-
-// Raycast flashlight against walls to position bounces correctly
 function updateFlashlight(){
     const fdx=Math.cos(pl.angle), fdz=Math.sin(pl.angle);
-    // Flashlight origin at player head height
     flashlight.position.set(pl.x, 1.6, pl.z);
     flashlight.target.position.set(pl.x+fdx*10, 1.0, pl.z+fdz*10);
-    flashHalo.position.set(pl.x, 1.5, pl.z);
-    flashHalo.target.position.set(pl.x+fdx*6, 0.5, pl.z+fdz*6);
-
-    // Ray-AABB: find how far beam travels before hitting a wall
-    let maxDist = 18;
-    // Outer walls
-    if(fdx > 0.001) maxDist = Math.min(maxDist, (HW - pl.x) / fdx);
-    else if(fdx < -0.001) maxDist = Math.min(maxDist, (-HW - pl.x) / fdx);
-    if(fdz > 0.001) maxDist = Math.min(maxDist, (HH - pl.z) / fdz);
-    else if(fdz < -0.001) maxDist = Math.min(maxDist, (-HH - pl.z) / fdz);
-    // Inner walls (cheap AABB intersection)
-    for(const w of innerWalls){
-        const hw=w.w/2, hd=w.d/2;
-        const invX = fdx===0 ? 1e9 : 1/fdx;
-        const invZ = fdz===0 ? 1e9 : 1/fdz;
-        const tx1=(w.x-hw-pl.x)*invX, tx2=(w.x+hw-pl.x)*invX;
-        const tz1=(w.z-hd-pl.z)*invZ, tz2=(w.z+hd-pl.z)*invZ;
-        const tmin=Math.max(Math.min(tx1,tx2), Math.min(tz1,tz2));
-        const tmax=Math.min(Math.max(tx1,tx2), Math.max(tz1,tz2));
-        if(tmax >= 0 && tmin <= tmax && tmin > 0) maxDist = Math.min(maxDist, tmin);
-    }
-    maxDist = Math.max(2, Math.min(maxDist, 18));
-
-    // Bounce 1: warm glow right at the hit surface
-    const bDist = maxDist * 0.92;
-    bounce1.position.set(pl.x + fdx*bDist, 1.0, pl.z + fdz*bDist);
-    // Bounce 2: mid-path floor fill
-    const b2Dist = maxDist * 0.5;
-    bounce2.position.set(pl.x + fdx*b2Dist, 0.25, pl.z + fdz*b2Dist);
 }
+
+// Stubbed FX (no-op versions for perf)
+function triggerMuzzleFlash(color){}
+function acquireBulletLight(color){return null;}
+function releaseBulletLight(l){}
+function hitFlashFX(x, z, color){}
 
 // ===== ARENA =====
 const AW = 50, AH = 35; // world units
@@ -790,8 +672,7 @@ function mkEnemy(type,x,z){
     }
 
     mesh.position.set(x,0,z);mesh.scale.set(0.01,0.01,0.01);
-    // Enemy casts flashlight shadow - dramatic atmosphere
-    mesh.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=false;}});
+    mesh.traverse(c=>{if(c.isMesh){c.castShadow=false;c.receiveShadow=false;}});
     scene.add(mesh);
     const ent={alive:true,type,x,z,r:d.r,spd:d.spd,hp:d.hp*hpM,maxHp:d.hp*hpM,dmg:d.dmg,sc:d.sc,
         col:d.col,eye:d.eye,angle:0,ranged:d.ranged||false,fRate:d.fRate||9,shotT:0,hitT:0,kbx:0,kbz:0,
@@ -827,7 +708,7 @@ function mkBoss(idx,x,z){
     const legL=mkBoxMesh(s*0.25,s*0.4,s*0.25,d.col);legL.position.set(-s*0.2,s*0.05,0);mesh.add(legL);
     const legR=mkBoxMesh(s*0.25,s*0.4,s*0.25,d.col);legR.position.set(s*0.2,s*0.05,0);mesh.add(legR);
     mesh.position.set(x,0,z);mesh.scale.set(0.01,0.01,0.01);
-    mesh.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=false;}});
+    mesh.traverse(c=>{if(c.isMesh){c.castShadow=false;c.receiveShadow=false;}});
     scene.add(mesh);
     const bhp=d.hp*1.3;
     return{alive:true,type:'boss',x,z,r:d.r,spd:d.spd,hp:bhp,maxHp:bhp,dmg:d.dmg,sc:d.sc,
@@ -854,23 +735,11 @@ function mkCrate(x,z){
     crates.push({alive:true,x,z,r:0.5,kind:isWep?'wep':'ammo',wi,mesh,t:0,spawnT:0.3});
 }
 
-// ===== EXPLOSION VISUAL FX =====
+// ===== EXPLOSION VISUAL FX (simplified - no lights, just particles) =====
 let explFlashes=[];
 const _explLightPool=[];
 function explodeFX(x,z,blast){
-    // Bright orange flash light (scaled to blast radius)
-    let light;
-    if(_explLightPool.length>0){light=_explLightPool.pop();}
-    else{light=new THREE.PointLight(0xff7030,1,1);}
-    const baseI=12+blast*3.5;
-    light.color.setHex(0xff7030);
-    light.intensity=baseI;
-    light.distance=blast*3.2;
-    light.position.set(x,0.8,z);
-    scene.add(light);
-    explFlashes.push({light,life:0.35,maxLife:0.35,baseI});
-    // Fiery particle burst - scales with blast
-    const n=Math.min(22,Math.floor(6+blast*1.8));
+    const n=Math.min(18,Math.floor(5+blast*1.5));
     const colors=[0xffaa20,0xff6020,0xff3010,0xffd040];
     for(let i=0;i<n;i++){
         if(particles.length>=MAX_PARTICLES)break;
@@ -1238,13 +1107,6 @@ function update(dt){
     muzzleLight.position.set(pl.x+Math.cos(pl.angle)*1,1,pl.z+Math.sin(pl.angle)*1);
     plBody.material.color.setHex(pl.hurtT>0?0xe03818:0x3a7a3a);
     updateFlashlight();
-    // Muzzle flash mesh fade
-    if(muzzleFlashT>0){
-        muzzleFlashT-=dt;
-        const r=Math.max(0,muzzleFlashT/0.09);
-        muzzleFlashMat.opacity=r;
-        const s=0.7+(1-r)*0.8;muzzleFlashMesh.scale.set(s,s,s);
-    }else if(muzzleFlashMesh.visible){muzzleFlashMesh.visible=false;muzzleFlashMat.opacity=0;}
 
     // Bullets
     for(const b of bullets){
